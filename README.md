@@ -20,6 +20,8 @@ Use this how you like. However, it is not intended as a replacement for proper d
 
 This comes with no warranty or promise that notes cannot be lost.
 
+![image](https://github.com/GavWood/EditorNotes/assets/17795588/8aef5919-3f6c-4e1a-bb81-3387cba6aaaf)
+
 ## Install
 
 Package should now appear in package manager.
