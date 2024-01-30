@@ -37,6 +37,12 @@ Open `Packages/manifest.json` with your favorite text editor. Add following line
 }
 ```
 
+### Via Add Package via Package Manager
+
+Open Package Manager from Unity's Window menu.
+
+Choose the option: Add package from git URL, and add (https://github.com/baawolf/EditorNotes.git)
+
 ## License
 
 MIT License
