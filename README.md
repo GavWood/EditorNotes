@@ -32,7 +32,7 @@ Open `Packages/manifest.json` with your favorite text editor. Add following line
 ```json
 {
   "dependencies": {
-    "com.baawolf.EditorNotes": "https://github.com/baawolf/EditorNotes.git"
+    "com.baawolf.EditorNotes": "https://github.com/gavwood/EditorNotes.git"
   }
 }
 ```
@@ -41,7 +41,7 @@ Open `Packages/manifest.json` with your favorite text editor. Add following line
 
 Open Package Manager from Unity's Window menu.
 
-Choose the option: Add package from git URL, and add (https://github.com/baawolf/EditorNotes.git)
+Choose the option: Add package from git URL, and add (https://github.com/gavwood/EditorNotes.git)
 
 ## License
 
