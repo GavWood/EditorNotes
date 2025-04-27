@@ -7,11 +7,17 @@ using System.Diagnostics;
 using Debug = UnityEngine.Debug;
 
 /// <summary>
-/// A simple note-taking editor window for writing, saving, and loading text notes in Unity Editor.
+/// A simple note-taking editor window for writing, saving, and loading text notes in the Unity Editor.
+/// Supports automatic recovery across playmode reloads.
 /// </summary>
 public class OpenDocs : EditorWindow
 {
     private const string DefaultFileName = "note.txt";
+
+    [SerializeField] private string serializedNotesContent = "";
+    [SerializeField] private string serializedCurrentFilePath = "";
+    [SerializeField] private bool serializedHasSavedPath = false;
+
     private string notesContent = "";
     private string currentFilePath = "";
     private bool hasSavedPath = false;
@@ -22,6 +28,9 @@ public class OpenDocs : EditorWindow
 
     private int previousCursorIndex = -1;
 
+    /// <summary>
+    /// Opens a folder in the system file explorer.
+    /// </summary>
     private static void OpenFolder(string folderPath)
     {
         if (Directory.Exists(folderPath))
@@ -38,10 +47,13 @@ public class OpenDocs : EditorWindow
         }
         else
         {
-            UnityEngine.Debug.LogError($"Folder not found: {folderPath}");
+            Debug.LogError($"Folder not found: {folderPath}");
         }
     }
 
+    /// <summary>
+    /// Returns the default documentation folder path.
+    /// </summary>
     private static string GetDocumentationFolderPath()
     {
         return Path.Combine(Directory.GetParent(Application.dataPath).FullName, "Documentation");
@@ -62,7 +74,7 @@ public class OpenDocs : EditorWindow
         string docPath = GetDocumentationFolderPath();
         if (!Directory.Exists(docPath))
         {
-            UnityEngine.Debug.LogWarning($"Documentation folder not found: {docPath}");
+            Debug.LogWarning($"Documentation folder not found: {docPath}");
         }
         OpenFolder(docPath);
     }
@@ -74,11 +86,11 @@ public class OpenDocs : EditorWindow
         if (!Directory.Exists(docPath))
         {
             Directory.CreateDirectory(docPath);
-            UnityEngine.Debug.Log($"Documentation folder created: {docPath}");
+            Debug.Log($"Documentation folder created: {docPath}");
         }
         else
         {
-            UnityEngine.Debug.LogWarning($"Documentation folder already exists: {docPath}");
+            Debug.LogWarning($"Documentation folder already exists: {docPath}");
         }
         OpenFolder(docPath);
     }
@@ -98,10 +110,15 @@ public class OpenDocs : EditorWindow
     }
 
     /// <summary>
-    /// Called when the window is enabled. Initializes the UI and loads default notes if found.
+    /// Creates the UI when the editor window is initialized.
     /// </summary>
-    void OnEnable()
+    void CreateGUI()
     {
+        // Restore serialized content
+        notesContent = serializedNotesContent;
+        currentFilePath = serializedCurrentFilePath;
+        hasSavedPath = serializedHasSavedPath;
+
         var root = rootVisualElement;
         root.Clear();
 
@@ -129,12 +146,15 @@ public class OpenDocs : EditorWindow
         textField.style.minHeight = 300;
         textField.style.unityTextAlign = TextAnchor.UpperLeft;
 
+        textField.SetValueWithoutNotify(notesContent);
+
         scrollView.Add(textField);
         root.Add(scrollView);
 
         textField.RegisterValueChangedCallback(evt =>
         {
             notesContent = evt.newValue;
+            serializedNotesContent = notesContent;
         });
 
         root.schedule.Execute(() =>
@@ -196,26 +216,25 @@ public class OpenDocs : EditorWindow
                 SaveNotes(currentFilePath);
         }, addMargin: false);
 
-        saveButton.SetEnabled(false);
+        saveButton.SetEnabled(hasSavedPath);
         buttonRow.Add(saveButton);
 
         root.Add(buttonRow);
 
-        string defaultPath = Path.Combine(Application.dataPath, "../Documentation", DefaultFileName);
-        if (File.Exists(defaultPath))
+        if (string.IsNullOrEmpty(notesContent))
         {
-            LoadFromPath(defaultPath);
-        }
-        else
-        {
-            CreateNewNote();
+            string defaultPath = Path.Combine(Application.dataPath, "../Documentation", DefaultFileName);
+            if (File.Exists(defaultPath))
+                LoadFromPath(defaultPath);
+            else
+                CreateNewNote();
         }
     }
 
     /// <summary>
-    /// Creates a new styled UI button.
+    /// Creates a styled button for the editor UI.
     /// </summary>
-    private Button CreateButton(string label, System.Action onClick, bool addMargin = true)
+    private Button CreateButton(string label, Action onClick, bool addMargin = true)
     {
         var btn = new Button(onClick) { text = label };
         btn.style.height = 24;
@@ -224,28 +243,30 @@ public class OpenDocs : EditorWindow
         return btn;
     }
 
-
+    /// <summary>
+    /// Creates a new blank note.
+    /// </summary>
     void CreateNewNote()
     {
-        /*
-        // Old versions of this package saved notes in EditorPrefs.
-        // So people don't lose their old notes I've grabbed any instance of the string here if you need this
-        string backupString = EditorPrefs.GetString("MyUnityNotes", "");
-        if (backupString.Length > 0)
-        {
-            NewNote(backupString);
-        }
-        */
         NewNote("Enter your notes here");
     }
 
+    /// <summary>
+    /// Initializes a new note with optional initial text.
+    /// </summary>
     void NewNote(string initialText = "")
     {
         notesContent = "";
+        serializedNotesContent = "";
+
         currentFilePath = "";
+        serializedCurrentFilePath = "";
+
         hasSavedPath = false;
+        serializedHasSavedPath = false;
+
         titleContent.text = "Notes - New";
-        saveButton.SetEnabled(false);
+        saveButton?.SetEnabled(false);
 
         rootVisualElement.schedule.Execute(() =>
         {
@@ -262,17 +283,17 @@ public class OpenDocs : EditorWindow
                 lines[i] = "\u200B";
 
             notesContent = string.Join("\n", lines);
+            serializedNotesContent = notesContent;
+
             textField.SetValueWithoutNotify(notesContent);
             textField.Focus();
             textField.SelectRange(0, initialText.Length);
         }).ExecuteLater(50);
     }
 
-
     /// <summary>
-    /// Saves the current note to a specific path.
+    /// Saves the current note to the specified file path.
     /// </summary>
-    /// <param name="path">File path to save to.</param>
     void SaveNotes(string path)
     {
         if (string.IsNullOrEmpty(path)) return;
@@ -281,7 +302,7 @@ public class OpenDocs : EditorWindow
     }
 
     /// <summary>
-    /// Opens a file dialog and saves the current note to the chosen location.
+    /// Opens a file save dialog to save the note under a new name.
     /// </summary>
     void SaveNotesWithDialog()
     {
@@ -293,14 +314,18 @@ public class OpenDocs : EditorWindow
         {
             SaveNotes(path);
             currentFilePath = path;
+            serializedCurrentFilePath = currentFilePath;
+
             hasSavedPath = true;
+            serializedHasSavedPath = true;
+
             saveButton.SetEnabled(true);
             titleContent.text = "Notes - " + Path.GetFileName(currentFilePath);
         }
     }
 
     /// <summary>
-    /// Opens a file dialog and loads a note from a selected file.
+    /// Opens a file open dialog to load a note.
     /// </summary>
     void LoadNotesWithDialog()
     {
@@ -318,22 +343,27 @@ public class OpenDocs : EditorWindow
     }
 
     /// <summary>
-    /// Loads note content from a specified file path.
+    /// Loads note content from a specific file path.
     /// </summary>
-    /// <param name="path">Path to the note file.</param>
     void LoadFromPath(string path)
     {
         notesContent = File.ReadAllText(path);
+        serializedNotesContent = notesContent;
+
         currentFilePath = path;
+        serializedCurrentFilePath = currentFilePath;
+
         hasSavedPath = true;
-        saveButton.SetEnabled(true);
+        serializedHasSavedPath = true;
+
+        saveButton?.SetEnabled(true);
         textField.SetValueWithoutNotify(notesContent);
         titleContent.text = "Notes - " + Path.GetFileName(currentFilePath);
         Debug.Log($"Notes loaded from: {path}");
     }
 
     /// <summary>
-    /// Automatically saves the current note on window close if a path is known.
+    /// Automatically saves notes if a file path is known when the window closes.
     /// </summary>
     void OnDisable()
     {
