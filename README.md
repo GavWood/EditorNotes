@@ -2,7 +2,7 @@
 
 # EditorNotes
 
-Creates a notes tab for use inside the Editor
+Allows you to quickly open a Documentation folder and enables a notes tab for use inside the Editor that lets you load, edit and save text files.
 
 - [How to use](#how-to-use)
 - [Install](#install)
@@ -12,15 +12,13 @@ Creates a notes tab for use inside the Editor
 
 ## How to use
 
-Using the BaaWolf menu at the top of your Unity Editor window select Notes. This creates a floating notes window.
+EditorNotes provides shortcuts for creating a standardized "Documentation" folder in your Unity project. It also lets you quickly open the documentation folder, the project root, or the parent directory.
 
-Notes are not sent over the Internet. They are stored in Editor preferences so your work is saved locally and private.
+![image](https://github.com/user-attachments/assets/8547ef44-ee41-4fd5-be35-af5fcd4d9140)
 
-Use this how you like. However, it is not intended as a replacement for proper documentation. Best used for a quick *todo* or thoughts.
+Its built-in editor window allows you to edit and manage notes directly inside Unity. You can quickly jot down important project information, as shown here with placeholder text from Lorem Ipsum. You can save these into your newly created documentation folder and keep safe with source control.
 
-This comes with no warranty or promise that notes cannot be lost.
-
-![image](https://github.com/GavWood/EditorNotes/assets/17795588/8aef5919-3f6c-4e1a-bb81-3387cba6aaaf)
+![image](https://github.com/user-attachments/assets/08d91e55-fbc3-4c27-b9af-39a66e6792f3)
 
 ## Install
 
